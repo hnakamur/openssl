@@ -7362,121 +7362,121 @@ int setup_tests(void)
 
 #if !defined(OPENSSL_NO_TLS1_2) && !defined(OPENSSL_NO_KTLS) \
     && !defined(OPENSSL_NO_SOCK)
-    ADD_TEST(test_ktls_no_txrx_client_no_txrx_server);
-    ADD_TEST(test_ktls_no_rx_client_no_txrx_server);
-    ADD_TEST(test_ktls_no_tx_client_no_txrx_server);
-    ADD_TEST(test_ktls_client_no_txrx_server);
-    ADD_TEST(test_ktls_no_txrx_client_no_rx_server);
-    ADD_TEST(test_ktls_no_rx_client_no_rx_server);
-    ADD_TEST(test_ktls_no_tx_client_no_rx_server);
-    ADD_TEST(test_ktls_client_no_rx_server);
-    ADD_TEST(test_ktls_no_txrx_client_no_tx_server);
-    ADD_TEST(test_ktls_no_rx_client_no_tx_server);
-    ADD_TEST(test_ktls_no_tx_client_no_tx_server);
-    ADD_TEST(test_ktls_client_no_tx_server);
-    ADD_TEST(test_ktls_no_txrx_client_server);
-    ADD_TEST(test_ktls_no_rx_client_server);
-    ADD_TEST(test_ktls_no_tx_client_server);
-    ADD_TEST(test_ktls_client_server);
+//    ADD_TEST(test_ktls_no_txrx_client_no_txrx_server);
+//    ADD_TEST(test_ktls_no_rx_client_no_txrx_server);
+//    ADD_TEST(test_ktls_no_tx_client_no_txrx_server);
+//    ADD_TEST(test_ktls_client_no_txrx_server);
+//    ADD_TEST(test_ktls_no_txrx_client_no_rx_server);
+//    ADD_TEST(test_ktls_no_rx_client_no_rx_server);
+//    ADD_TEST(test_ktls_no_tx_client_no_rx_server);
+//    ADD_TEST(test_ktls_client_no_rx_server);
+//    ADD_TEST(test_ktls_no_txrx_client_no_tx_server);
+//    ADD_TEST(test_ktls_no_rx_client_no_tx_server);
+//    ADD_TEST(test_ktls_no_tx_client_no_tx_server);
+//    ADD_TEST(test_ktls_client_no_tx_server);
+//    ADD_TEST(test_ktls_no_txrx_client_server);
+//    ADD_TEST(test_ktls_no_rx_client_server);
+//    ADD_TEST(test_ktls_no_tx_client_server);
+//    ADD_TEST(test_ktls_client_server);
     ADD_TEST(test_ktls_sendfile);
 #endif
-    ADD_TEST(test_large_message_tls);
-    ADD_TEST(test_large_message_tls_read_ahead);
-#ifndef OPENSSL_NO_DTLS
-    ADD_TEST(test_large_message_dtls);
-#endif
-#ifndef OPENSSL_NO_OCSP
-    ADD_TEST(test_tlsext_status_type);
-#endif
-    ADD_TEST(test_session_with_only_int_cache);
-    ADD_TEST(test_session_with_only_ext_cache);
-    ADD_TEST(test_session_with_both_cache);
-#ifndef OPENSSL_NO_TLS1_3
-    ADD_ALL_TESTS(test_stateful_tickets, 3);
-    ADD_ALL_TESTS(test_stateless_tickets, 3);
-    ADD_TEST(test_psk_tickets);
-#endif
-    ADD_ALL_TESTS(test_ssl_set_bio, TOTAL_SSL_SET_BIO_TESTS);
-    ADD_TEST(test_ssl_bio_pop_next_bio);
-    ADD_TEST(test_ssl_bio_pop_ssl_bio);
-    ADD_TEST(test_ssl_bio_change_rbio);
-    ADD_TEST(test_ssl_bio_change_wbio);
-#if !defined(OPENSSL_NO_TLS1_2) || defined(OPENSSL_NO_TLS1_3)
-    ADD_ALL_TESTS(test_set_sigalgs, OSSL_NELEM(testsigalgs) * 2);
-    ADD_TEST(test_keylog);
-#endif
-#ifndef OPENSSL_NO_TLS1_3
-    ADD_TEST(test_keylog_no_master_key);
-#endif
-#ifndef OPENSSL_NO_TLS1_2
-    ADD_TEST(test_client_hello_cb);
-    ADD_TEST(test_no_ems);
-    ADD_TEST(test_ccs_change_cipher);
-#endif
-#ifndef OPENSSL_NO_TLS1_3
-    ADD_ALL_TESTS(test_early_data_read_write, 3);
-    /*
-     * We don't do replay tests for external PSK. Replay protection isn't used
-     * in that scenario.
-     */
-    ADD_ALL_TESTS(test_early_data_replay, 2);
-    ADD_ALL_TESTS(test_early_data_skip, 3);
-    ADD_ALL_TESTS(test_early_data_skip_hrr, 3);
-    ADD_ALL_TESTS(test_early_data_skip_hrr_fail, 3);
-    ADD_ALL_TESTS(test_early_data_skip_abort, 3);
-    ADD_ALL_TESTS(test_early_data_not_sent, 3);
-    ADD_ALL_TESTS(test_early_data_psk, 8);
-    ADD_ALL_TESTS(test_early_data_not_expected, 3);
-# ifndef OPENSSL_NO_TLS1_2
-    ADD_ALL_TESTS(test_early_data_tls1_2, 3);
-# endif
-#endif
-#ifndef OPENSSL_NO_TLS1_3
-    ADD_ALL_TESTS(test_set_ciphersuite, 10);
-    ADD_TEST(test_ciphersuite_change);
-    ADD_ALL_TESTS(test_tls13_ciphersuite, 4);
-# ifdef OPENSSL_NO_PSK
-    ADD_ALL_TESTS(test_tls13_psk, 1);
-# else
-    ADD_ALL_TESTS(test_tls13_psk, 4);
-# endif  /* OPENSSL_NO_PSK */
-# ifndef OPENSSL_NO_TLS1_2
-    /* Test with both TLSv1.3 and 1.2 versions */
-    ADD_ALL_TESTS(test_key_exchange, 14);
-# else
-    /* Test with only TLSv1.3 versions */
-    ADD_ALL_TESTS(test_key_exchange, 12);
-# endif
-    ADD_ALL_TESTS(test_custom_exts, 5);
-    ADD_TEST(test_stateless);
-    ADD_TEST(test_pha_key_update);
-#else
-    ADD_ALL_TESTS(test_custom_exts, 3);
-#endif
-    ADD_ALL_TESTS(test_serverinfo, 8);
-    ADD_ALL_TESTS(test_export_key_mat, 6);
-#ifndef OPENSSL_NO_TLS1_3
-    ADD_ALL_TESTS(test_export_key_mat_early, 3);
-    ADD_TEST(test_key_update);
-    ADD_ALL_TESTS(test_key_update_in_write, 2);
-#endif
-    ADD_ALL_TESTS(test_ssl_clear, 2);
-    ADD_ALL_TESTS(test_max_fragment_len_ext, OSSL_NELEM(max_fragment_len_test));
-#if !defined(OPENSSL_NO_SRP) && !defined(OPENSSL_NO_TLS1_2)
-    ADD_ALL_TESTS(test_srp, 6);
-#endif
-    ADD_ALL_TESTS(test_info_callback, 6);
-    ADD_ALL_TESTS(test_ssl_pending, 2);
-    ADD_ALL_TESTS(test_ssl_get_shared_ciphers, OSSL_NELEM(shared_ciphers_data));
-    ADD_ALL_TESTS(test_ticket_callbacks, 16);
-    ADD_ALL_TESTS(test_shutdown, 7);
-    ADD_ALL_TESTS(test_cert_cb, 6);
-    ADD_ALL_TESTS(test_client_cert_cb, 2);
-    ADD_ALL_TESTS(test_ca_names, 3);
-#ifndef OPENSSL_NO_TLS1_2
-    ADD_ALL_TESTS(test_multiblock_write, OSSL_NELEM(multiblock_cipherlist_data));
-#endif
-    ADD_ALL_TESTS(test_servername, 10);
+//    ADD_TEST(test_large_message_tls);
+//    ADD_TEST(test_large_message_tls_read_ahead);
+//#ifndef OPENSSL_NO_DTLS
+//    ADD_TEST(test_large_message_dtls);
+//#endif
+//#ifndef OPENSSL_NO_OCSP
+//    ADD_TEST(test_tlsext_status_type);
+//#endif
+//    ADD_TEST(test_session_with_only_int_cache);
+//    ADD_TEST(test_session_with_only_ext_cache);
+//    ADD_TEST(test_session_with_both_cache);
+//#ifndef OPENSSL_NO_TLS1_3
+//    ADD_ALL_TESTS(test_stateful_tickets, 3);
+//    ADD_ALL_TESTS(test_stateless_tickets, 3);
+//    ADD_TEST(test_psk_tickets);
+//#endif
+//    ADD_ALL_TESTS(test_ssl_set_bio, TOTAL_SSL_SET_BIO_TESTS);
+//    ADD_TEST(test_ssl_bio_pop_next_bio);
+//    ADD_TEST(test_ssl_bio_pop_ssl_bio);
+//    ADD_TEST(test_ssl_bio_change_rbio);
+//    ADD_TEST(test_ssl_bio_change_wbio);
+//#if !defined(OPENSSL_NO_TLS1_2) || defined(OPENSSL_NO_TLS1_3)
+//    ADD_ALL_TESTS(test_set_sigalgs, OSSL_NELEM(testsigalgs) * 2);
+//    ADD_TEST(test_keylog);
+//#endif
+//#ifndef OPENSSL_NO_TLS1_3
+//    ADD_TEST(test_keylog_no_master_key);
+//#endif
+//#ifndef OPENSSL_NO_TLS1_2
+//    ADD_TEST(test_client_hello_cb);
+//    ADD_TEST(test_no_ems);
+//    ADD_TEST(test_ccs_change_cipher);
+//#endif
+//#ifndef OPENSSL_NO_TLS1_3
+//    ADD_ALL_TESTS(test_early_data_read_write, 3);
+//    /*
+//     * We don't do replay tests for external PSK. Replay protection isn't used
+//     * in that scenario.
+//     */
+//    ADD_ALL_TESTS(test_early_data_replay, 2);
+//    ADD_ALL_TESTS(test_early_data_skip, 3);
+//    ADD_ALL_TESTS(test_early_data_skip_hrr, 3);
+//    ADD_ALL_TESTS(test_early_data_skip_hrr_fail, 3);
+//    ADD_ALL_TESTS(test_early_data_skip_abort, 3);
+//    ADD_ALL_TESTS(test_early_data_not_sent, 3);
+//    ADD_ALL_TESTS(test_early_data_psk, 8);
+//    ADD_ALL_TESTS(test_early_data_not_expected, 3);
+//# ifndef OPENSSL_NO_TLS1_2
+//    ADD_ALL_TESTS(test_early_data_tls1_2, 3);
+//# endif
+//#endif
+//#ifndef OPENSSL_NO_TLS1_3
+//    ADD_ALL_TESTS(test_set_ciphersuite, 10);
+//    ADD_TEST(test_ciphersuite_change);
+//    ADD_ALL_TESTS(test_tls13_ciphersuite, 4);
+//# ifdef OPENSSL_NO_PSK
+//    ADD_ALL_TESTS(test_tls13_psk, 1);
+//# else
+//    ADD_ALL_TESTS(test_tls13_psk, 4);
+//# endif  /* OPENSSL_NO_PSK */
+//# ifndef OPENSSL_NO_TLS1_2
+//    /* Test with both TLSv1.3 and 1.2 versions */
+//    ADD_ALL_TESTS(test_key_exchange, 14);
+//# else
+//    /* Test with only TLSv1.3 versions */
+//    ADD_ALL_TESTS(test_key_exchange, 12);
+//# endif
+//    ADD_ALL_TESTS(test_custom_exts, 5);
+//    ADD_TEST(test_stateless);
+//    ADD_TEST(test_pha_key_update);
+//#else
+//    ADD_ALL_TESTS(test_custom_exts, 3);
+//#endif
+//    ADD_ALL_TESTS(test_serverinfo, 8);
+//    ADD_ALL_TESTS(test_export_key_mat, 6);
+//#ifndef OPENSSL_NO_TLS1_3
+//    ADD_ALL_TESTS(test_export_key_mat_early, 3);
+//    ADD_TEST(test_key_update);
+//    ADD_ALL_TESTS(test_key_update_in_write, 2);
+//#endif
+//    ADD_ALL_TESTS(test_ssl_clear, 2);
+//    ADD_ALL_TESTS(test_max_fragment_len_ext, OSSL_NELEM(max_fragment_len_test));
+//#if !defined(OPENSSL_NO_SRP) && !defined(OPENSSL_NO_TLS1_2)
+//    ADD_ALL_TESTS(test_srp, 6);
+//#endif
+//    ADD_ALL_TESTS(test_info_callback, 6);
+//    ADD_ALL_TESTS(test_ssl_pending, 2);
+//    ADD_ALL_TESTS(test_ssl_get_shared_ciphers, OSSL_NELEM(shared_ciphers_data));
+//    ADD_ALL_TESTS(test_ticket_callbacks, 16);
+//    ADD_ALL_TESTS(test_shutdown, 7);
+//    ADD_ALL_TESTS(test_cert_cb, 6);
+//    ADD_ALL_TESTS(test_client_cert_cb, 2);
+//    ADD_ALL_TESTS(test_ca_names, 3);
+//#ifndef OPENSSL_NO_TLS1_2
+//    ADD_ALL_TESTS(test_multiblock_write, OSSL_NELEM(multiblock_cipherlist_data));
+//#endif
+//    ADD_ALL_TESTS(test_servername, 10);
     return 1;
 }
 
