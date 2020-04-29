@@ -382,16 +382,22 @@ int tls1_change_cipher_state(SSL *s, int which)
         goto err;
     }
 #ifndef OPENSSL_NO_KTLS
-    if (s->compress)
+    if (s->compress) {
+        fprintf(stderr, "KTLS: Skip ktls because compressed, s=%p, which=%d\n", s, which);
         goto skip_ktls;
+    }
 
     if (((which & SSL3_CC_READ) && (s->mode & SSL_MODE_NO_KTLS_RX))
-        || ((which & SSL3_CC_WRITE) && (s->mode & SSL_MODE_NO_KTLS_TX)))
+        || ((which & SSL3_CC_WRITE) && (s->mode & SSL_MODE_NO_KTLS_TX))) {
+        fprintf(stderr, "KTLS: Skip ktls because of ssl_mode, s=%p, which=%d\n", s, which);
         goto skip_ktls;
+    }
 
     /* ktls supports only the maximum fragment size */
-    if (ssl_get_max_send_fragment(s) != SSL3_RT_MAX_PLAIN_LENGTH)
+    if (ssl_get_max_send_fragment(s) != SSL3_RT_MAX_PLAIN_LENGTH) {
+        fprintf(stderr, "KTLS: Skip ktls because of fragment size, s=%p, which=%d\n", s, which);
         goto skip_ktls;
+    }
 
 # ifdef __FreeBSD__
     memset(&crypto_info, 0, sizeof(crypto_info));
@@ -403,8 +409,10 @@ int tls1_change_cipher_state(SSL *s, int which)
         break;
     case SSL_AES128:
     case SSL_AES256:
-        if (s->ext.use_etm)
+        if (s->ext.use_etm) {
+            fprintf(stderr, "KTLS: Skip ktls because of ext.use_etm, s=%p, which=%d\n", s, which);
             goto skip_ktls;
+        }
         switch (s->s3.tmp.new_cipher->algorithm_mac) {
         case SSL_SHA1:
             crypto_info.auth_algorithm = CRYPTO_SHA1_HMAC;
@@ -416,6 +424,7 @@ int tls1_change_cipher_state(SSL *s, int which)
             crypto_info.auth_algorithm = CRYPTO_SHA2_384_HMAC;
             break;
         default:
+            fprintf(stderr, "KTLS: Skip ktls because of algorithm_mac, s=%p, which=%d\n", s, which);
             goto skip_ktls;
         }
         crypto_info.cipher_algorithm = CRYPTO_AES_CBC;
@@ -424,6 +433,7 @@ int tls1_change_cipher_state(SSL *s, int which)
         crypto_info.auth_key_len = *mac_secret_size;
         break;
     default:
+        fprintf(stderr, "KTLS: Skip ktls because of algorithm_enc, s=%p, which=%d\n", s, which);
         goto skip_ktls;
     }
     crypto_info.cipher_key = key;
@@ -435,12 +445,16 @@ int tls1_change_cipher_state(SSL *s, int which)
     /* check that cipher is AES_GCM_128 */
     if (EVP_CIPHER_nid(c) != NID_aes_128_gcm
         || EVP_CIPHER_mode(c) != EVP_CIPH_GCM_MODE
-        || EVP_CIPHER_key_length(c) != TLS_CIPHER_AES_GCM_128_KEY_SIZE)
+        || EVP_CIPHER_key_length(c) != TLS_CIPHER_AES_GCM_128_KEY_SIZE) {
+        fprintf(stderr, "KTLS: Skip ktls because of cipher, s=%p, which=%d\n", s, which);
         goto skip_ktls;
+    }
 
     /* check version is 1.2 */
-    if (s->version != TLS1_2_VERSION)
+    if (s->version != TLS1_2_VERSION) {
+        fprintf(stderr, "KTLS: Skip ktls because of TLS version not 1.2, s=%p, which=%d\n", s, which);
         goto skip_ktls;
+    }
 # endif
 
     if (which & SSL3_CC_WRITE)
@@ -456,8 +470,10 @@ int tls1_change_cipher_state(SSL *s, int which)
 
     /* All future data will get encrypted by ktls. Flush the BIO or skip ktls */
     if (which & SSL3_CC_WRITE) {
-       if (BIO_flush(bio) <= 0)
+       if (BIO_flush(bio) <= 0) {
+           fprintf(stderr, "KTLS: Skip ktls because flush failed, s=%p, which=%d\n", s, which);
            goto skip_ktls;
+       }
     }
 
     /* ktls doesn't support renegotiation */
@@ -489,8 +505,10 @@ int tls1_change_cipher_state(SSL *s, int which)
 
     if (which & SSL3_CC_READ) {
         count_unprocessed = count_unprocessed_records(s);
-        if (count_unprocessed < 0)
+        if (count_unprocessed < 0) {
+            fprintf(stderr, "KTLS: Skip ktls because of count unprocessed records failed, s=%p, which=%d\n", s, which);
             goto skip_ktls;
+        }
 
         /* increment the crypto_info record sequence */
         while (count_unprocessed) {
@@ -505,7 +523,9 @@ int tls1_change_cipher_state(SSL *s, int which)
 # endif
 
     /* ktls works with user provided buffers directly */
+    fprintf(stderr, "KTLS: Calling BIO_set_ktls, s=%p, which=%d\n", s, which);
     if (BIO_set_ktls(bio, &crypto_info, which & SSL3_CC_WRITE)) {
+        fprintf(stderr, "KTLS: BIO_set_ktls succeeded, s=%p, which=%d\n", s, which);
         if (which & SSL3_CC_WRITE)
             ssl3_release_write_buffer(s);
         SSL_set_options(s, SSL_OP_NO_RENEGOTIATION);
