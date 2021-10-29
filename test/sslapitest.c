@@ -1322,9 +1322,13 @@ static int execute_test_ktls_sendfile(int tls_version, const char *cipher)
     if (!TEST_true(create_ssl_objects2(sctx, cctx, &serverssl,
                                        &clientssl, sfd, cfd)))
         goto end;
+    fprintf(stderr, "DEBUG_KTLS: after create_ssl_objects2, serverssl=%p, clientssl=%p, clientssl->options=0x%lx\n",  serverssl, clientssl, clientssl->options);
 
-    if (!TEST_true(SSL_set_options(serverssl, SSL_OP_ENABLE_KTLS)))
+    if (!TEST_true(SSL_set_options(serverssl, SSL_OP_ENABLE_KTLS))) {
+        fprintf(stderr, "DEBUG_KTLS: SSL_set_options(serverssl, SSL_OP_ENABLE_KTLS) failed.\n");
         goto end;
+    }
+    fprintf(stderr, "DEBUG_KTLS: SSL_set_options(serverssl, SSL_OP_ENABLE_KTLS) OK, serverssl->options=0x%lx, SSL_OP_ENABLE_KTLS=0x%lx, serverssl=%p.\n", serverssl->options, SSL_OP_ENABLE_KTLS, serverssl);
 
     if (!TEST_true(create_ssl_connection(serverssl, clientssl,
                                          SSL_ERROR_NONE)))
@@ -9621,10 +9625,13 @@ int setup_tests(void)
 
 #if !defined(OPENSSL_NO_KTLS) && !defined(OPENSSL_NO_SOCK)
 # if !defined(OPENSSL_NO_TLS1_2) || !defined(OSSL_NO_USABLE_TLS1_3)
+#if defined(MY_DEBUG_RUN_ALL_KTLS_TESTS)
     ADD_ALL_TESTS(test_ktls, NUM_KTLS_TEST_CIPHERS * 4);
+#endif /* defined(MY_DEBUG_RUN_ALL_KTLS_TESTS) */
     ADD_ALL_TESTS(test_ktls_sendfile, NUM_KTLS_TEST_CIPHERS);
 # endif
 #endif
+#if defined(MY_DEBUG_RUN_ALL_KTLS_TESTS)
     ADD_TEST(test_large_message_tls);
     ADD_TEST(test_large_message_tls_read_ahead);
 #ifndef OPENSSL_NO_DTLS
@@ -9758,6 +9765,7 @@ int setup_tests(void)
     ADD_TEST(test_inherit_verify_param);
     ADD_TEST(test_set_alpn);
     ADD_ALL_TESTS(test_session_timeout, 1);
+#endif /* defined(MY_DEBUG_RUN_ALL_KTLS_TESTS) */
     return 1;
 
  err:

@@ -123,6 +123,7 @@ int ktls_check_supported_cipher(const SSL *s, const EVP_CIPHER *c,
     case TLS1_3_VERSION:
         break;
     default:
+        fprintf(stderr, "DEBUG_KTLS: Skip ktls for s=%p because tls version is %d, nor TLS 1.2 nor 1.3\n", s, s->version);
         return 0;
     }
 
@@ -134,8 +135,10 @@ int ktls_check_supported_cipher(const SSL *s, const EVP_CIPHER *c,
 # ifdef OPENSSL_KTLS_AES_CCM_128
     case NID_aes_128_ccm:
         if (s->version == TLS_1_3_VERSION /* broken on 5.x kernels */
-            || EVP_CIPHER_CTX_get_tag_length(dd) != EVP_CCM_TLS_TAG_LEN)
+            || EVP_CIPHER_CTX_get_tag_length(dd) != EVP_CCM_TLS_TAG_LEN) {
+          fprintf(stderr, "DEBUG_KTLS: Skip ktls for s=%p NID_aes_128_ccm, TLS 1.3 or tag_length mismatch, (s->version==TLS_1_3_VERSION)=%d.\n", s, s->version == TLS_1_3_VERSION);
           return 0;
+        }
 # endif
 # ifdef OPENSSL_KTLS_AES_GCM_128
         /* Fall through */
@@ -149,6 +152,7 @@ int ktls_check_supported_cipher(const SSL *s, const EVP_CIPHER *c,
 # endif
         return 1;
     default:
+        fprintf(stderr, "DEBUG_KTLS: Skip ktls for s=%p unsupporeted EVP_CIPHER_get_nid(c)=%d\n", s, EVP_CIPHER_get_nid(c));
         return 0;
     }
 }
@@ -167,8 +171,10 @@ int ktls_configure_crypto(const SSL *s, const EVP_CIPHER *c, EVP_CIPHER_CTX *dd,
         EVP_CIPHER_get_mode(c) == EVP_CIPH_GCM_MODE) {
         if (!EVP_CIPHER_CTX_get_updated_iv(dd, geniv,
                                            EVP_GCM_TLS_FIXED_IV_LEN
-                                           + EVP_GCM_TLS_EXPLICIT_IV_LEN))
+                                           + EVP_GCM_TLS_EXPLICIT_IV_LEN)) {
+            fprintf(stderr, "DEBUG_KTLS: Skip ktls for s=%p in ktls_configure_crypto case#1\n", s);
             return 0;
+        }
         iiv = geniv;
     }
 
@@ -236,6 +242,7 @@ int ktls_configure_crypto(const SSL *s, const EVP_CIPHER *c, EVP_CIPHER_CTX *dd,
         return 1;
 # endif
     default:
+        fprintf(stderr, "DEBUG_KTLS: Skip ktls for s=%p in ktls_configure_crypto case#2\n", s);
         return 0;
     }
 
