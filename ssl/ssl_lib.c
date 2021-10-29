@@ -2094,6 +2094,7 @@ ossl_ssize_t SSL_sendfile(SSL *s, int fd, off_t offset, size_t size, int flags)
     return -1;
 #else
     ret = ktls_sendfile(SSL_get_wfd(s), fd, offset, size, flags);
+    OSSL_TRACE7(KTLS, "ktls_sendfile ret=%ld, s=%p, wfd=%d, fd=%d, offset=%ld, size=%ld, flags=%d\n", ret, s, SSL_get_wfd(s), fd, offset, size, flags);
     if (ret < 0) {
 #if defined(EAGAIN) && defined(EINTR) && defined(EBUSY)
         if ((get_last_sys_error() == EAGAIN) ||

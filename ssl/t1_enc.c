@@ -434,16 +434,22 @@ int tls1_change_cipher_state(SSL *s, int which)
     }
 
 #ifndef OPENSSL_NO_KTLS
-    if (s->compress || (s->options & SSL_OP_ENABLE_KTLS) == 0)
+    if (s->compress || (s->options & SSL_OP_ENABLE_KTLS) == 0) {
+        OSSL_TRACE4(KTLS, "Skip ktls for s=%p because compressed or ktls disabled, s->compress=%p, s->options=0x%lx, disabled=%d.\n", s, s->compress, s->options, (s->options & SSL_OP_ENABLE_KTLS) == 0);
         goto skip_ktls;
+    }
 
     /* ktls supports only the maximum fragment size */
-    if (ssl_get_max_send_fragment(s) != SSL3_RT_MAX_PLAIN_LENGTH)
+    if (ssl_get_max_send_fragment(s) != SSL3_RT_MAX_PLAIN_LENGTH) {
+        OSSL_TRACE3(KTLS, "Skip ktls for s=%p because fragment size is not max, fragment=%u, max=%u\n", s, ssl_get_max_send_fragment(s), SSL3_RT_MAX_PLAIN_LENGTH);
         goto skip_ktls;
+    }
 
     /* check that cipher is supported */
-    if (!ktls_check_supported_cipher(s, c, dd))
+    if (!ktls_check_supported_cipher(s, c, dd)) {
+        OSSL_TRACE1(KTLS, "Skip ktls for s=%p because cipher is not supported.\n", s);
         goto skip_ktls;
+    }
 
     if (which & SSL3_CC_WRITE)
         bio = s->wbio;
@@ -457,8 +463,10 @@ int tls1_change_cipher_state(SSL *s, int which)
 
     /* All future data will get encrypted by ktls. Flush the BIO or skip ktls */
     if (which & SSL3_CC_WRITE) {
-       if (BIO_flush(bio) <= 0)
+       if (BIO_flush(bio) <= 0) {
+           OSSL_TRACE1(KTLS, "Skip ktls for s=%p because BIO_flush failed.\n", s);
            goto skip_ktls;
+       }
     }
 
     /* ktls doesn't support renegotiation */
@@ -474,14 +482,18 @@ int tls1_change_cipher_state(SSL *s, int which)
         rl_sequence = RECORD_LAYER_get_read_sequence(&s->rlayer);
 
     if (!ktls_configure_crypto(s, c, dd, rl_sequence, &crypto_info, &rec_seq,
-                               iv, key, ms, *mac_secret_size))
+                               iv, key, ms, *mac_secret_size)) {
+        OSSL_TRACE1(KTLS, "Skip ktls for s=%p because ktls_configure_crypto failed.\n", s);
         goto skip_ktls;
+    }
 
     if (which & SSL3_CC_READ) {
 # ifndef OPENSSL_NO_KTLS_RX
         count_unprocessed = count_unprocessed_records(s);
-        if (count_unprocessed < 0)
+        if (count_unprocessed < 0) {
+            OSSL_TRACE2(KTLS, "Skip ktls for s=%p because count_unprocessed=%d < 0\n", s, count_unprocessed);
             goto skip_ktls;
+        }
 
         /* increment the crypto_info record sequence */
         while (count_unprocessed) {
@@ -493,12 +505,14 @@ int tls1_change_cipher_state(SSL *s, int which)
             count_unprocessed--;
         }
 # else
+        OSSL_TRACE1(KTLS, "Skip ktls for s=%p because OPENSSL_NO_KTLS_RX is defined.\n", s);
         goto skip_ktls;
 # endif
     }
 
     /* ktls works with user provided buffers directly */
     if (BIO_set_ktls(bio, &crypto_info, which & SSL3_CC_WRITE)) {
+        OSSL_TRACE4(KTLS, "s=%p BIO_set_ktls(bio, &crypto_info, which & SSL3_CC_WRITE) returned true, which=0x%x, SSL3_CC_WRITE=0x%x, which & SSL3_CC_WRITE=0x%x\n", s, which, SSL3_CC_WRITE, which & SSL3_CC_WRITE);
         if (which & SSL3_CC_WRITE)
             ssl3_release_write_buffer(s);
         SSL_set_options(s, SSL_OP_NO_RENEGOTIATION);
@@ -507,6 +521,7 @@ int tls1_change_cipher_state(SSL *s, int which)
  skip_ktls:
 #endif                          /* OPENSSL_NO_KTLS */
     s->statem.enc_write_state = ENC_WRITE_STATE_VALID;
+    OSSL_TRACE1(KTLS, "s=%p after s->statem.enc_write_state = ENC_WRITE_STATE_VALID.\n", s);
 
     OSSL_TRACE_BEGIN(TLS) {
         BIO_printf(trc_out, "which = %04X, key:\n", which);
