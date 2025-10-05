@@ -142,6 +142,13 @@ extern "C" {
 /* ExtensionType value from RFC7627 */
 # define TLSEXT_TYPE_extended_master_secret      23
 
+/* ExtensionType value from RFC6961 */
+# define TLSEXT_TYPE_status_request_v2           17
+/* ExtensionType value from RFC8449 */
+# define TLSEXT_TYPE_record_size_limit           28
+/* ExtensionType value from RFC7639 */
+# define TLSEXT_TYPE_application_settings        17513
+
 /* ExtensionType value from RFC8879 */
 # define TLSEXT_TYPE_compress_certificate        27
 

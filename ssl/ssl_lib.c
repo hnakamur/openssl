@@ -6892,6 +6892,108 @@ int SSL_client_hello_get1_extensions_present(SSL *s, int **out, size_t *outlen)
     return 0;
 }
 
+size_t SSL_client_hello_get_ja3_data(SSL *s, unsigned char *data,
+        size_t data_size)
+{
+    RAW_EXTENSION *ext;
+    PACKET *groups = NULL, *formats = NULL;
+    size_t num = 0, i;
+    unsigned char *ptr = data,
+                  *end = data + data_size;
+    const SSL_CONNECTION *sc = SSL_CONNECTION_FROM_SSL(s);
+
+    if (sc == NULL)
+        return 0;
+
+    if (ossl_unlikely(sc->clienthello == NULL || data == NULL
+                /** just checking that we have at least this */
+                || data_size < 128))
+        return 0;
+
+    /* version */
+    *(uint16_t *) ptr = (uint16_t) sc->clienthello->legacy_version;
+    ptr += sizeof(uint16_t);
+
+    /* ciphers */
+    num = PACKET_remaining(&sc->clienthello->ciphersuites);
+    if (ossl_likely(num > 0)) {
+        *(uint16_t *) ptr = (uint16_t) num;
+        ptr += sizeof(uint16_t);
+
+        if (ossl_unlikely(ptr + num > end))
+            return 0;
+
+        memcpy(ptr, PACKET_data(&sc->clienthello->ciphersuites), num);
+        ptr += num;
+    }
+
+    /* extensions */
+    num = 0;
+    for (i = 0; i < sc->clienthello->pre_proc_exts_len; i++) {
+        ext = sc->clienthello->pre_proc_exts + i;
+        if (ext->present)
+            num++;
+    }
+
+    num = num * 2;
+    if (ossl_unlikely((ptr + num + sizeof(uint16_t)) > end))
+        return 0;
+
+    *(uint16_t*) ptr = (uint16_t) num;
+    ptr += sizeof(uint16_t);
+
+    for (i = 0; i < sc->clienthello->pre_proc_exts_len; i++) {
+        ext = sc->clienthello->pre_proc_exts + i;
+        if (ext->present) {
+            if (ext->received_order >= num)
+                break;
+            if (ext->type == TLSEXT_TYPE_supported_groups)
+                groups = &ext->data;
+            if (ext->type == TLSEXT_TYPE_ec_point_formats)
+                formats = &ext->data;
+            if (ossl_likely(ext->received_order < data_size)) {
+                ((uint16_t*)(ptr))[ext->received_order] = (uint16_t) ext->type;
+            }
+        }
+    }
+
+    ptr += num;
+
+    /* groups */
+    if (groups
+        && (num = PACKET_remaining(groups)) > 0)
+    {
+        if (ossl_unlikely((ptr + num + sizeof(uint16_t)) > end))
+            return 0;
+        memcpy(ptr, PACKET_data(groups), num);
+        *(uint16_t*) ptr = (uint16_t) num;
+        ptr += num;
+    } else {
+        if (ossl_unlikely(ptr + sizeof(uint16_t) > end))
+            return 0;
+        *(uint16_t *) ptr = (uint16_t) 0;
+        ptr += sizeof(uint16_t);
+    }
+
+    /* formats */
+    if (formats
+        && (num = PACKET_remaining(formats)) > 0)
+    {
+        if (ossl_unlikely((ptr + num + sizeof(uint8_t)) > end))
+            return 0;
+        memcpy(ptr, PACKET_data(formats), num);
+        *(uint8_t *) ptr = (uint8_t) num;
+        ptr += num;
+    } else {
+        if (ossl_unlikely(ptr + sizeof(uint8_t) > end))
+            return 0;
+        *(uint8_t *) ptr = (uint8_t) 0;
+        ptr += sizeof(uint8_t);
+    }
+
+    return ptr - data;
+}
+
 int SSL_client_hello_get_extension_order(SSL *s, uint16_t *exts, size_t *num_exts)
 {
     RAW_EXTENSION *ext;
